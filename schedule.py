@@ -3,6 +3,7 @@ import itertools
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from datetime import datetime, timedelta
 
 counter = 1
 
@@ -228,11 +229,45 @@ def draw_schedule(courses):
     # 绘制课程表
     fig = go.Figure()
 
+    # 设置图表布局
+    fig.update_layout(
+        title=f"每周课程表{counter}",
+        xaxis=dict(
+            tickvals=list(range(len(days))),
+            ticktext=days,
+            title="Day",
+            range=[-0.5, 6.5],
+            showgrid=False
+        ),
+        yaxis=dict(
+            tickvals=times,
+            ticktext=times.strftime('%H:%M'),
+            title="Time",
+            autorange="reversed",
+            showgrid=False
+        ),
+        showlegend=False,
+        height=600
+    )
+    counter+=1
+
+    # 绘制背景网格
+    for hour in range(8, 21):
+        fig.add_shape(
+            type="line",
+            x0=-0.5, x1=6.5,
+            y0=datetime.strptime(f"2024-01-01 {hour}:00", "%Y-%m-%d %H:%M"),
+            y1=datetime.strptime(f"2024-01-01 {hour}:00", "%Y-%m-%d %H:%M"),
+            line=dict(color="LightGray", width=1),
+            layer="below"
+        )
+
     # 添加时间格子
     for index, row in df.iterrows():
         start_time = row["原始开始时间"].strftime('%H:%M')
         end_time = row["原始结束时间"].strftime('%H:%M')
         day_name = days[row["星期"]]
+
 
         # 添加矩形
         fig.add_shape(
@@ -255,29 +290,13 @@ def draw_schedule(courses):
             textposition="middle center",
             hoverinfo="none",
             textfont=dict(color="black", size=12, family="Arial")
+            
         ))
-
-    # 设置图表布局
-    fig.update_layout(
-        title=f"每周课程表{counter}",
-        xaxis=dict(
-            tickvals=list(range(len(days))),
-            ticktext=days,
-            title="Day",
-            range=[-0.5, 6.5]
-        ),
-        yaxis=dict(
-            tickvals=times,
-            ticktext=times.strftime('%H:%M'),
-            title="Time",
-            autorange="reversed"
-        ),
-        showlegend=False,
-        height=600
-    )
-    counter+=1
+    
 
     st.plotly_chart(fig)
+
+
 
 
 def process_query(courses, tut_flag):
